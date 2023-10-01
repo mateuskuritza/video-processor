@@ -1,0 +1,27 @@
+# Use uma imagem base com Node.js
+FROM node:16
+
+# Atualize o índice de pacotes e instale o ffmpeg
+RUN apt-get update && \
+    apt-get install -y ffmpeg && \
+    apt-get clean
+
+# Crie um diretório de trabalho dentro do contêiner
+WORKDIR /app
+
+# Copie os arquivos de código-fonte para o contêiner
+COPY package*.json ./
+COPY tsconfig.json ./
+COPY src ./src/
+
+# Instale as dependências
+RUN npm install
+
+# Compile o código TypeScript
+RUN npm run build
+
+# Exponha a porta que a aplicação irá ouvir
+EXPOSE 8080
+
+# Comando para iniciar a aplicação
+CMD [ "node", "dist/app.js" ]
