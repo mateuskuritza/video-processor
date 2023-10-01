@@ -7,8 +7,8 @@ import { upload } from './uploads/multer';
 const app = express();
 const port = process.env.PORT || 8080;
 
-// Rota POST /video para fazer upload e cortar vídeos
-app.post('/video', upload.single('video'), (req: Request, res: Response) => {
+// Rota POST /videos para fazer upload e cortar vídeos
+app.post('/videos', upload.single('video'), (req: Request, res: Response) => {
     if (!req.file) {
         return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
     }
