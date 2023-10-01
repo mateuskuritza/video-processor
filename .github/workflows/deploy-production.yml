@@ -1,0 +1,52 @@
+on:
+  push:
+    branches:
+      - production
+
+name: Build and Deploy to Cloud Run
+env:
+  PROJECT_ID: ${{ secrets.PROJECT_ID }}
+  SA_KEY: ${{ secrets.GCP_SA_KEY }}
+  SERVICE: video-processor
+  REGION: southamerica-east1
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        node-version: [16.x]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0.2.0
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+          service_account_key: ${{ env.SA_KEY }}
+
+      - name: Authorize Docker push images to GCP
+        run: gcloud auth configure-docker
+
+      - name: 'Create key to service account permissions'
+        id: video-processor-sa-json
+        uses: jsdaniell/create-json@v1.2.2
+        with:
+          name: 'video-processor-sa.json'
+          json: ${{ env.SA_KEY }}
+
+      - name: Build and Push image to GCP
+        run: |-
+          docker build -t gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:latest -f Dockerfile.cloudrun .
+          docker push gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:latest
+
+      # DEPLOY
+      - name: Deploy image pushed to Cloud Run
+        run: |-
+          gcloud run deploy ${{ env.SERVICE }} \
+            --region ${{ env.REGION }} \
+            --image gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:latest \
+            --platform "managed" \
+            --quiet
