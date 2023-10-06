@@ -5,7 +5,7 @@ import path from 'path';
 import { upload } from './uploads/multer';
 
 const app = express();
-const port = process.env.PORT || 8080;
+const port = process.env.PORT || 3001;
 
 // Rota POST /videos para fazer upload e cortar vídeos
 app.post('/videos', upload.single('video'), (req: Request, res: Response) => {
